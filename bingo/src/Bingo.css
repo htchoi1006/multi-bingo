@@ -1,0 +1,52 @@
+.Bingo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+.bingo-card {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-gap: 5px;
+}
+
+.bingo-cell {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.bingo-cell.selected {
+  background-color: #007bff;
+  color: #ffffff;
+}
+
+.called-numbers {
+  margin: 20px 0;
+}
+
+.call-number-button {
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.call-number-button:hover {
+  background-color: #0056b3;
+}
+
+
+.bingo-cell.selected {
+  background-color: blue;
+}
