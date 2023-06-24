@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
-// import socket from './socket';
 import './Bingo.css';
 
-const socket = io('http://localhost:3000');  
+const socket = io('http://localhost:3000');
 
 const Bingo = () => {
   const [calledNumbers, setCalledNumbers] = useState([]);
-  const [bingoCard, setBingoCard] = useState(generateBingoCard());
-  const [isMyTurn, setIsMyTurn] = useState(false);  
+  const [bingoCard, setBingoCard] = useState(() => generateBingoCard());
+  const [isMyTurn, setIsMyTurn] = useState(false);
+  const [selectedNumber, setSelectedNumber] = useState(null);
+  const [currentPlayer, setCurrentPlayer] = useState(null);
 
   useEffect(() => {
     socket.on('gameState', (newGameState) => {
       setCalledNumbers(newGameState.calledNumbers);
-      setIsMyTurn(newGameState.currentPlayer === socket.id);  
+      setIsMyTurn(newGameState.currentPlayer === socket.id);
+      setCurrentPlayer(newGameState.currentPlayer);
     });
 
     return () => {
@@ -37,22 +39,22 @@ const Bingo = () => {
     return card;
   }
 
-
   const onClickNumber = (row, col) => {
+    const number = Math.abs(bingoCard[row][col]);
+    setSelectedNumber(number);
+  };
+
+  const markNumber = (row, col) => {
     const newCard = [...bingoCard];
-    const number = newCard[row][col];
-    if (number > 0) {  
-      callNumber(number);  
-    }
     newCard[row][col] *= -1;
     setBingoCard(newCard);
   };
 
-
-  const callNumber = (number) => {  
-    if (isMyTurn) { 
-      if (!calledNumbers.includes(number)) {
-        socket.emit('numberCalled', number);
+  const callNumber = () => {
+    if (isMyTurn && selectedNumber) {
+      if (!calledNumbers.includes(selectedNumber)) {
+        socket.emit('numberCalled', selectedNumber);
+        setSelectedNumber(null);
       }
     }
   };
@@ -62,12 +64,15 @@ const Bingo = () => {
       <div className="bingo-card">
         {bingoCard.map((row, rowIndex) => (
           row.map((number, colIndex) => {
-            const isSelected = calledNumbers.includes(Math.abs(number)); 
+            const isSelected = calledNumbers.includes(Math.abs(number));
             return (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                className={`bingo-cell${isSelected ? ' selected' : ''}`} 
-                onClick={() => onClickNumber(rowIndex, colIndex)}
+                className={`bingo-cell${isSelected ? ' selected' : ''}`}
+                onClick={() => {
+                  onClickNumber(rowIndex, colIndex);
+                  markNumber(rowIndex, colIndex);
+                }}
               >
                 {Math.abs(number)}
               </div>
@@ -81,6 +86,9 @@ const Bingo = () => {
         {calledNumbers.join(', ')}
       </div>
 
+      <div className="turn-indicator">
+        <h2>현재 차례: {currentPlayer === socket.id ? '나' : '상대방'}</h2>
+      </div>
 
       <button className="call-number-button" onClick={callNumber}>숫자 선택 완료</button>
     </div>
