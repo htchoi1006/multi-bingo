@@ -16,12 +16,25 @@ const Bingo = () => {
       setCalledNumbers(newGameState.calledNumbers);
       setIsMyTurn(newGameState.currentPlayer === socket.id);
       setCurrentPlayer(newGameState.currentPlayer);
+      checkForBingo();
     });
 
     return () => {
       socket.off('gameState');
     };
-  }, []);
+  }, [bingoCard, calledNumbers]);
+
+  const checkForBingo = () => {
+    const markedCard = bingoCard.map(row => row.map(number => calledNumbers.includes(Math.abs(number))));
+    const transposedCard = markedCard[0].map((col, i) => markedCard.map(row => row[i]));
+    const diagonals = [markedCard, markedCard.slice().reverse()].map(card => card.map((row, i) => row[i]));
+
+    const hasBingo = [...markedCard, ...transposedCard, ...diagonals].some(row => row.every(cell => cell));
+
+    if (hasBingo) {
+      alert('게임에서 이겼습니다');
+    }
+  };
 
   function generateBingoCard() {
     const card = [];
