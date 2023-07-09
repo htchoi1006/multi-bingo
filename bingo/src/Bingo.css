@@ -50,3 +50,7 @@
 .bingo-cell.selected {
   background-color: blue;
 }
+
+.bingo-cell.highlighted {
+  border: 2px solid red;
+}

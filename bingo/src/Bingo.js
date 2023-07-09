@@ -10,19 +10,22 @@ const Bingo = () => {
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState(null);
   const [currentPlayer, setCurrentPlayer] = useState(null);
+  const [selectedCell, setSelectedCell] = useState(null);
 
   useEffect(() => {
     socket.on('gameState', (newGameState) => {
       setCalledNumbers(newGameState.calledNumbers);
       setIsMyTurn(newGameState.currentPlayer === socket.id);
       setCurrentPlayer(newGameState.currentPlayer);
-      checkForBingo();
     });
+
+    checkForBingo();
 
     return () => {
       socket.off('gameState');
     };
   }, [bingoCard, calledNumbers]);
+
 
   const checkForBingo = () => {
     const markedCard = bingoCard.map(row => row.map(number => calledNumbers.includes(Math.abs(number))));
@@ -32,7 +35,8 @@ const Bingo = () => {
     const hasBingo = [...markedCard, ...transposedCard, ...diagonals].some(row => row.every(cell => cell));
 
     if (hasBingo) {
-      alert('게임에서 이겼습니다');
+      socket.emit('bingo');
+      alert('게임에서 이겼습니다.');
     }
   };
 
@@ -55,6 +59,7 @@ const Bingo = () => {
   const onClickNumber = (row, col) => {
     const number = Math.abs(bingoCard[row][col]);
     setSelectedNumber(number);
+    setSelectedCell({ row, col });
   };
 
   const markNumber = (row, col) => {
@@ -68,6 +73,7 @@ const Bingo = () => {
       if (!calledNumbers.includes(selectedNumber)) {
         socket.emit('numberCalled', selectedNumber);
         setSelectedNumber(null);
+        setSelectedCell(null);
       }
     }
   };
@@ -78,10 +84,11 @@ const Bingo = () => {
         {bingoCard.map((row, rowIndex) => (
           row.map((number, colIndex) => {
             const isSelected = calledNumbers.includes(Math.abs(number));
+            const isHighlighted = selectedCell?.row === rowIndex && selectedCell?.col === colIndex;
             return (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                className={`bingo-cell${isSelected ? ' selected' : ''}`}
+                className={`bingo-cell${isSelected ? ' selected' : ''}${isHighlighted ? ' highlighted' : ''}`}
                 onClick={() => {
                   onClickNumber(rowIndex, colIndex);
                   markNumber(rowIndex, colIndex);
