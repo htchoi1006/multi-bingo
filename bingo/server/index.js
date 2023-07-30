@@ -48,6 +48,17 @@ io.on('connection', (socket) => {
       }
     }
   });
+
+  socket.on('bingo', () => {
+    for (const id in players) {
+      players[id].emit('gameOver', socket.id);
+    }
+    gameState = {
+      calledNumbers: [],
+      currentPlayer: null,
+    };
+  });
+  
 });
 
 

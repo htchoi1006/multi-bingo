@@ -12,6 +12,20 @@ const Bingo = () => {
   const [currentPlayer, setCurrentPlayer] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null);
 
+  // useEffect(() => {
+  //   socket.on('gameState', (newGameState) => {
+  //     setCalledNumbers(newGameState.calledNumbers);
+  //     setIsMyTurn(newGameState.currentPlayer === socket.id);
+  //     setCurrentPlayer(newGameState.currentPlayer);
+  //   });
+
+  //   checkForBingo();
+
+  //   return () => {
+  //     socket.off('gameState');
+  //   };
+  // }, [bingoCard, calledNumbers]);
+
   useEffect(() => {
     socket.on('gameState', (newGameState) => {
       setCalledNumbers(newGameState.calledNumbers);
@@ -19,10 +33,23 @@ const Bingo = () => {
       setCurrentPlayer(newGameState.currentPlayer);
     });
 
+    socket.on('gameOver', (winnerId) => {
+      if (winnerId === socket.id) {
+        alert('게임에서 이겼습니다!');
+      } else {
+        alert('게임에서 패배했습니다!');
+      }
+      // setCalledNumbers([]);
+      // setBingoCard(generateBingoCard());
+      // setIsMyTurn(false);
+      resetGame();
+    });
+
     checkForBingo();
 
     return () => {
       socket.off('gameState');
+      socket.off('gameOver');
     };
   }, [bingoCard, calledNumbers]);
 
@@ -36,7 +63,7 @@ const Bingo = () => {
 
     if (hasBingo) {
       socket.emit('bingo');
-      alert('게임에서 이겼습니다.');
+      // alert('게임에서 이겼습니다.');
     }
   };
 
@@ -78,6 +105,15 @@ const Bingo = () => {
     }
   };
 
+  const resetGame = () => {
+    setCalledNumbers([]);
+    const newCard = generateBingoCard();
+    setBingoCard(newCard);
+    setIsMyTurn(false);
+    setSelectedNumber(null);
+    setSelectedCell(null);
+  };
+
   return (
     <div className="Bingo">
       <div className="bingo-card">
@@ -102,7 +138,7 @@ const Bingo = () => {
       </div>
 
       <div className="called-numbers">
-        <h2>상대가 부른 숫자:</h2>
+        <h2>현재까지 나온 숫자:</h2>
         {calledNumbers.join(', ')}
       </div>
 
